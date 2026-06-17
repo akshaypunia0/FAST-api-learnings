@@ -32,3 +32,13 @@ def get_user(user_id: int):
 @app.get('/params')
 def params(name: str = None):
     return {"name": name}
+
+
+# post apis start here
+
+@app.post('/addUser')
+def addUser(data: User):
+    return {
+        "message": "User data",
+        "data": data
+    }
