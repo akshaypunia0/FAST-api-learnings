@@ -1,44 +1,39 @@
-from fastapi import FastAPI
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-from pydantic import BaseModel
-
-class User(BaseModel):
-    name: str
-    age: int
+from fastapi import FastAPI, Depends
 
 app = FastAPI()
 
-@app.get('/')
-def home():
-    return {"message": "Hello from venv"}
+DATABASE_URL = "sqlite:///./test.db"
 
-@app.get('/about')
-def about():
-    return {"Message": "My name is Akshay Chaudhary, I'm a software engineer"}
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}
+)
 
+sessionLocal = sessionmaker(bind = engine)
 
-@app.get('/users')
-def users():
-    users = ["Akshay", "Vishal", "kahshdf"]
+Base = declarative_base()
 
-    return {
-        "users": users
-    }
+class Todo(Base):
+    __tablename__ = "todos"
 
-@app.get('/user/{user_id}')
-def get_user(user_id: int):
-    return {"user": user_id}
+    id = Column(Integer, primary_key = True, index = True)
+    title = Column(String)
+    completed = Column(String)
 
-@app.get('/params')
-def params(name: str = None):
-    return {"name": name}
+Base.metadata.create_all(bind=engine)
 
+def get_db():
+    db = sessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# post apis start here
-
-@app.post('/addUser')
-def addUser(data: User):
-    return {
-        "message": "User data",
-        "data": data
+@app.get("/")
+def home(db: Session = Depends(get_db)):
+    return{
+        "message": "Db connected"
     }
